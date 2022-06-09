@@ -105,6 +105,16 @@ RESULT     := $(shell SRC_DIR=$(SRC_DIR) BUILD_DIR=$(BUILD_DIR) ./buildsystem/gi
 ##########################
 #define available Systems#
 ##########################
+ifeq ($(SYSTYPE),"Katana")
+include buildsystem/Makefile.path.katana
+include buildsystem/Makefile.comp.gcc
+endif
+
+ifeq ($(SYSTYPE), "Gadi")
+include buildsystem/Makefile.path.gadi
+include buildsystem/Makefile.comp.gcc
+endif
+
 ifeq ($(SYSTYPE),"Generic-gcc")
 include buildsystem/Makefile.gen.libs
 include buildsystem/Makefile.comp.gcc
