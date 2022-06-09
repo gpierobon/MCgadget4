@@ -890,8 +890,8 @@ void snap_io::write_header_fields(hid_t handle)
   write_scalar_attribute(handle, "Redshift", &header.redshift, H5T_NATIVE_DOUBLE);
   write_scalar_attribute(handle, "BoxSize", &header.BoxSize, H5T_NATIVE_DOUBLE);
   write_scalar_attribute(handle, "NumFilesPerSnapshot", &header.num_files, H5T_NATIVE_INT);
-  write_string_attribute(handle, "Git_commit", GIT_COMMIT);
-  write_string_attribute(handle, "Git_date", GIT_DATE);
+  //write_string_attribute(handle, "Git_commit", GIT_COMMIT);
+  //write_string_attribute(handle, "Git_date", GIT_DATE);
 
 #if defined(REARRANGE_OPTION) && defined(MERGERTREE)
   if(snap_type == MOST_BOUND_PARTICLE_SNAPHOT_REORDERED)
