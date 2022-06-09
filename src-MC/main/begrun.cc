@@ -62,7 +62,7 @@ void sim::hello(void)
       "( (_-. /(__)\\  )(_) )( (_-. )__)   )( (___)(_  _)\n \\___/(__)(__)(____/  \\___/(____) (__)       (_)\n\n");
 
   //mpi_printf("This is Gadget, version %s.\nGit commit %s, %s\n\n", GADGET_VERSION, GIT_COMMIT, GIT_DATE);
-  mpi_printf("This is MCgadget4, taken from Gadget4 version %s.\n);
+  mpi_printf("This is MCgadget4, taken from Gadget4 version %s.\n", GADGET_VERSION);
 
   mpi_printf("Code was compiled with the following compiler and flags:\n%s\n\n\n", compiler_flags);
 

@@ -92,3 +92,4 @@ tests/EuclidTest/G4_TreePM/output
 site/
 
 .clang-format
+*/Template-Config.sh
