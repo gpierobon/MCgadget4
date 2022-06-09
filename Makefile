@@ -459,7 +459,7 @@ LIBS = $(MATH_LIBS) $(HDF5_LIBS) $(GSL_LIBS) $(FFTW_LIBS) $(HWLOC_LIBS) $(VTUNE_
 
 
 SUBDIRS := $(addprefix $(BUILD_DIR)/,$(SUBDIRS))
-OBJS := $(addprefix $(BUILD_DIR)/,$(OBJS)) $(BUILD_DIR)/compile_time_info.o $(BUILD_DIR)/compile_time_info_hdf5.o $(BUILD_DIR)/version.o
+OBJS := $(addprefix $(BUILD_DIR)/,$(OBJS)) $(BUILD_DIR)/compile_time_info.o $(BUILD_DIR)/compile_time_info_hdf5.o #$(BUILD_DIR)/version.o
 INCL := $(addprefix $(SRC_DIR)/,$(INCL)) $(BUILD_DIR)/gadgetconfig.h
 
 
