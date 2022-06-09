@@ -5,6 +5,8 @@ GADGET-4
 
 ![](documentation/img/top.jpg)
 
+MCgadget4 is the N-body code for Axion Miniclusters in the Early Universe and based on the GADGET-4 code.
+
 GADGET-4 is a massively parallel code for N-body/hydrodynamical
 cosmological simulations. It is a flexible code that can be applied to
 a variety of different types of simulations, offering a number of
