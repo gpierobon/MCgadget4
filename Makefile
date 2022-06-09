@@ -72,7 +72,7 @@ BUILD_DIR = build
 endif
 
 
-SRC_DIR = src
+SRC_DIR = src-MC
 
 ###################
 #determine SYSTYPE#
