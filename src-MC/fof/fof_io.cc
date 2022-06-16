@@ -436,8 +436,10 @@ void fof_io<partset>::write_header_fields(hid_t handle)
   write_scalar_attribute(handle, "Redshift", &catalogue_header.redshift, H5T_NATIVE_DOUBLE);
   write_scalar_attribute(handle, "BoxSize", &catalogue_header.BoxSize, H5T_NATIVE_DOUBLE);
 
+  /* MCgadget4 - removed git original info
   write_string_attribute(handle, "Git_commit", GIT_COMMIT);
   write_string_attribute(handle, "Git_date", GIT_DATE);
+  */
 }
 
 /*! \brief This function reads the snapshot header in case of hdf5 files (i.e. format 3)
