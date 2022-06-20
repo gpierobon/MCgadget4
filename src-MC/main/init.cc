@@ -513,7 +513,7 @@ void sim::init(int RestartSnapNum)
          All.RestartFlag == RST_CREATEICS)
         {
           /* can't do this check when not all particles are loaded */
-          //check_omega();
+          check_omega();
         }
       else
         {
