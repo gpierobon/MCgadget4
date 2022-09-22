@@ -17,13 +17,12 @@
 module purge
 
 source /home/561/gp5547/python_env/bin/activate
-#export PYTHONPATH=/home/561/gp5547/gadget4-tools:$PYTHONPATH
 export OMP_NUM_THREADS=16
 
 mkdir -p aout
-mkdir -p aout/plots aout/render aout/spectrum aout/delta aout/dist aout/void aout/profile  
+mkdir -p aout/plots aout/render aout/spectrum aout/delta aout/dist aout/void aout/profile aout/vprofile  
 
-OPT=8                        # 0 = projection plot
+OPT=9                        # 0 = projection plot
 			     # 1 = volume render plot	
                              # 2 = power spectrum
 			     # 3 = delta grid save in hdf5 
@@ -32,6 +31,7 @@ OPT=8                        # 0 = projection plot
 			     # 6 = void size function at given time $ST and threshold $THR
 			     # 7 = void fraction and energy as a function of time and threshold $THR
 			     # 8 = density profiles of heaviest $NH objects at time $ST
+			     # 9 = density profiles of first $NH voids at time $ST and threshold/radius $THR,VRAD
 
 NFI=1                        # Number of files to process
 ST=4                         # Snapshot selected
@@ -42,12 +42,14 @@ CR=2048                      # Camera resolution in volume render
 NB=100                       # Number of bins for density distribution
 DIFF=0                       # Add distribution of gradient energy  
 
-VRAD=10                      # Void radius for density distribution
-THR=0.2                      # Void threshold for smoothing, only for OPT=5,6
+VRAD=25                      # Void radius for density distribution (OPT=5) or profile (OPT=9)
+FIL='False'                   # Check for filaments instead of voids
+THR=0.7                      # Void threshold for smoothing, only for OPT=5,6
+THR2=0.5                     # Lower threshold for filaments
  
 FOF='True'                   # FOF data or Subhalo data for profiles 
 RAD='R200'                   # Radius in profile: 'R200','R500','RMean','TopHat'
 RMIN=1                       # Rmin for profile in units of the softening lenght
-NH=2                         # Number of halos to profile
+NH=10                         # Number of halos to profile
 
-python3 postprocessing.py ic3_s15 $OPT $NFI $ST $MAP $CR $NB $DIFF $VRAD $THR $FOF $RAD $RMIN $NH   
+python3 postprocessing.py ic1v_late_v2 $OPT $NFI $ST $MAP $CR $NB $DIFF $VRAD $FIL $THR $THR2 $FOF $RAD $RMIN $NH   

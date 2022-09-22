@@ -28,11 +28,13 @@ camres    = int(sys.argv[6])
 nbins     = int(sys.argv[7])
 dflag     = int(sys.argv[8])
 rlist     = int(sys.argv[9])
-vthres    = float(sys.argv[10])
-fof_flag  = sys.argv[11]
-rad_type  = sys.argv[12]
-r_min     = float(sys.argv[13])
-nhalos    = int(sys.argv[14])
+fil_flag  = sys.argv[10]
+vthres    = float(sys.argv[11])
+vthres2   = float(sys.argv[12])
+fof_flag  = sys.argv[13]
+rad_type  = sys.argv[14]
+r_min     = float(sys.argv[15])
+nhalos    = int(sys.argv[16])
 
 if Nfiles > 1:
     snapshots = [str(snap_base)+'/snap'+f'_00{i}' for i in range(Nfiles)]
@@ -164,7 +166,7 @@ if atype == 4:
 
 ##########################################################################
 if atype == 5:
-    print('Saving density distribution data for void centers')
+    print('Saving density distribution data for void/filaments centers')
     ga.check_folder('dist',snap_base)
     
     if Nfiles > 1:
@@ -211,14 +213,15 @@ if atype == 6:
     
     DeltaGrid  = L/512
     threshold  = -vthres
+    thresh2    = -vthres2
     Radii      = DeltaGrid*np.arange(5,67+1,2, dtype=np.float32)
     threads1   = 16
     threads2   = 4
-    void_field = True
+    void_field = False
 
     fv  = open('aout/void/'+str(snap_base)+'/vsf_thr_'+str(vthres)+'_z%d.txt'%stime,'w+') 
    
-    V = VL.void_finder(delta[stime], BoxSize, threshold, Radii, threads1, threads2, void_field=void_field)
+    V = VL.void_finder(delta[stime], BoxSize, threshold, thresh2, Radii, threads1, threads2, void_field=void_field, filaments=False)
     void_pos    = V.void_pos    
     void_radius = V.void_radius 
     VSF_R       = V.Rbins   
@@ -232,24 +235,35 @@ if atype == 6:
 
 ##########################################################################
 if atype == 7:
-    print("Finding voids volume and density as function of redshift ...")
     ga.check_folder('void',snap_base)
     
     if Nfiles == 1:
         raise Exception('Nfiles>1 is needed!')
     
+    filam      = fil_flag
+    if fil_flag:
+        threshold  = -0.05       # Defaulted to almost average density   
+        thresh2    = -vthres2    # Input
+        print("Finding filaments volume and density as function of redshift for values %.2f < delta < -0.05 ..."%(-vthres2))
+    else:
+        threshold  = -vthres     # Input 
+        thresh2    = -1.0        # Defaulted to zero energy  
+        print("Finding voids volume and density as function of redshift for values delta < %.2f ..."%(-vthres))
+    
     DeltaGrid  = L/512
-    threshold  = -vthres
     Radii      = DeltaGrid*np.arange(5,100+1,5, dtype=np.float32)
     threads1   = 16
     threads2   = 4
     void_field = True
-
-    fv = open('aout/void/'+str(snap_base)+'/fvoid_thr_'+str(vthres)+'_dens.txt','w+') 
+    
+    if fil_flag:
+        fv = open('aout/void/'+str(snap_base)+'/fvoid_thr_'+str(vthres)+'_dens.txt','w+') 
+    else:
+        fv = open('aout/void/'+str(snap_base)+'/ffil_thr_'+str(vthres2)+'_dens.txt','w+') 
     print("Saving void finding data in aout/void ...")
     
     for i in range(Nfiles):
-        V = VL.void_finder(delta[i], BoxSize, threshold, Radii, threads1, threads2, void_field=void_field)
+        V = VL.void_finder(delta[i], BoxSize, threshold, thresh2, Radii, threads1, threads2, void_field=void_field, filaments=filam)
         void_pos    = V.void_pos    
         void_radius = V.void_radius 
         VSF_R       = V.Rbins       
@@ -299,10 +313,44 @@ if atype == 8:
         x,y  = ga.profile(pos-halopos[i:i+1,:],mass,BoxSize,rmin,rad[i]) 
         x = np.array(x); y = np.array(y)
         np.savetxt('aout/profile/'+str(snap_base)+'/f_'+str(stime)+'_gr_'+str(i)+'.txt',np.column_stack([x, y]))
-        #fil = open('aout/profile/'+str(snap_base)+'/f_'+str(stime)+'_gr_'+str(i)+'.txt','w+')
-        #for j in range(len(r)):
-        #    fil.write('%.5f %.5f\n'%(r[j],rho[j]))
-        #fil.close()
+
+if atype == 9:
+    print("Computing density profiles of voids ...")
+    ga.check_folder('vprofile',snap_base)
+    
+    if Nfiles > 1:
+        raise Exception('Density profile estimation for voids is only available for one file, set Nfiles=1')
+     
+    num_voids  = nhalos
+    threshold  = -vthres 
+    thresh2    = -vthres2    
+    DeltaGrid  = L/512
+    rad_list   = [rlist]
+    Radii      = DeltaGrid*np.array(rad_list, dtype=np.float32)
+    threads1   = 16
+    threads2   = 4
+    void_field = False
+    filam      = False
+    
+    V = VL.void_finder(delta, BoxSize, threshold, thresh2, Radii, threads1, threads2, void_field=void_field, filaments=filam)
+    void_pos    = V.void_pos    
+    void_radius = V.void_radius
+
+    snap = str(snap_base)+'/snap_00'+str(stime)
+    head, pp    = ga.load_particles(snap,verbose=True) # pp holds pos,vel,mass,ID
+    
+    rmin = BoxSize/512
+    rad  = void_radius 
+    pos  = pp[0]
+    mass = pp[2]
+    
+    for i in range(min(num_voids,len(rad))):
+        print('Computing void profile %d/%d ... '%(i+1,min(num_voids,len(rad))))
+        x,y  = ga.profile(pos-void_pos[i:i+1,:],mass,BoxSize,rmin,rad[i]) 
+        x = np.array(x); y = np.array(y)
+        np.savetxt('aout/profile/'+str(snap_base)+'/void_'+str(stime)+'_rad_'+str(rlist)+'_gr_'+str(i)+'.txt',np.column_stack([x, y]))
+
+
         
 print("done!")
 
