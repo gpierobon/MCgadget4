@@ -3,6 +3,7 @@ import errno
 import yt
 import h5py as h5
 import numpy as np
+import numba
 
 def check_folder(foldname,snap_base):
     try:
@@ -11,6 +12,18 @@ def check_folder(foldname,snap_base):
         if exc.errno != errno.EEXIST:
             raise
         pass
+
+def set_thres(vthres,vthres2,fil_flag=False):
+    filam      = fil_flag
+    if fil_flag == True:
+        threshold  = -0.05       # Defaulted to almost average density   
+        thresh2    = -vthres2    # Input
+        print("Finding filaments volume and density as function of redshift for values %.2f < delta < -0.05 ..."%(-vthres2))
+    else:
+        threshold  = -vthres     # Input 
+        thresh2    = -1.0        # Defaulted to zero energy  
+        print("Finding voids volume and density as function of redshift for values delta < %.2f ..."%(-vthres))
+    return vthres, vthres2, fil_flag
 
 def get_info(f):
     """
@@ -141,8 +154,95 @@ def load_particles(f,verbose=True):
     if verbose:
         print('%d particles loaded: data is stored in header,pos,vel,mass,ID'%nparts)
 
-    return head,out 
+    return head,out
 
+def to_numpy(dr,dp):
+    adr  = np.array(dr).astype('float32')
+    ares = np.array(dp).astype('float32')
+    return adr, ares
+
+
+def random_disp():
+    dx = np.random.uniform(0.25,1)
+    dy = np.random.uniform(0.25,1)
+    dz = np.random.uniform(0.25,1)
+    dr = np.sqrt(dx**2+dy**2+dz**2)
+    return dx,dy,dz,dr
+
+
+#@numba.njit()
+def density_gradient(delta,N):  # Only North-East-Front octant for now
+    drli = []
+    dpli = []
+
+    size = len(delta)*4*2*1e-9
+    print("Saving %.5f GBs"%size)
+
+    for idx in range(len(delta)):
+
+        dx,dy,dz,dr = random_disp() 
+        res = CIC(idx,dx,dy,dz,N)
+        drli.append(dr)
+        dpli.append(res)
+
+    return drli,dpli
+        
+
+@numba.njit()
+def CIC(idx,dx,dy,dz,N):
+    out0, out2, x0, x1 = idx2vec(idx,N)
+    xyz = idx
+    Xyz = out0
+    xYz = out2
+    xyZ = idx + N*N
+    if x1 != N-1: XYz = Xyz + N
+    else:         XYz = xYz + 1
+    if x0 != N-1: XyZ = xyZ + 1
+    else:         XyZ = xyZ + N
+    if x1 != N-1: xYZ = xyZ + N
+    else:         xYZ = xYz +N*N
+    if x1 != N-1: XYZ = Xyz + N + N*N 
+    else:         XYZ = xYz + 1 + N*N
+
+    res = xyz * ((1.-dx) * (1.-dy) * (1.-dz)) +\
+          Xyz * (dx      * (1.-dy) * (1.-dz)) +\
+          xYz * ((1.-dx) * dy      * (1.-dz)) +\
+          xyZ * (dx      * dy      * (1.-dz)) +\
+          XYz * ((1.-dx) * (1.-dy) * dz     ) +\
+          XyZ * (dx      * (1.-dy) * dz     ) +\
+          xYZ * ((1.-dx) *  dy     * dz     ) +\
+          XYZ * (dx      *  dy     * dz     )
+
+    return res
+
+
+@numba.njit()
+def idx2vec(idx,N):
+    out0 = 0
+    out2 = 0
+    tmp = idx/N
+    S   = N*N
+
+    x2  = tmp/N
+    x1  = tmp - x2*N
+    x0  = idx - tmp*N
+
+    if x0 == 0:
+        out0 = idx + 1
+    else:
+        if x0 == N-1:
+            out0 = idx - N + 1
+        else:
+            out0 = idx + 1
+    if x1 == 0:
+        out2 = idx + N
+    else:
+        if x1 == N-1:
+            out2 = idx - S + N
+        else:
+            out2 = idx + N
+
+    return out0,out2,x0,x1
 
 def profile(x,mass,L,rmin,rad,nbins=50):
     '''

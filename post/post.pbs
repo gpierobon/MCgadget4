@@ -3,7 +3,7 @@
 #PBS -P xu32
 #PBS -q normal
 
-#PBS -l walltime=6:00:00
+#PBS -l walltime=12:00:00
 #PBS -l storage=scratch/xu32
 
 #PBS -l mem=50gb
@@ -12,7 +12,7 @@
 
 #PBS -M g.pierobon@unsw.edu.au
 #PBS -m e 
-#PBS -N output
+#PBS -N var
 
 module purge
 
@@ -20,36 +20,39 @@ source /home/561/gp5547/python_env/bin/activate
 export OMP_NUM_THREADS=16
 
 mkdir -p aout
-mkdir -p aout/plots aout/render aout/spectrum aout/delta aout/dist aout/void aout/profile aout/vprofile  
+mkdir -p aout/plots aout/render aout/spectrum aout/delta aout/dist aout/void aout/profile aout/vprofile aout/vprofile/raw  
 
-OPT=9                        # 0 = projection plot
+OPT=10                        # 0 = projection plot
 			     # 1 = volume render plot	
                              # 2 = power spectrum
 			     # 3 = delta grid save in hdf5 
 			     # 4 = distribution of 1+delta in $NB bins and $DIFF is selected
-			     # 5 = distribution of 1+delta for void centers
+			     # 5 = distribution of 1+delta for void/filament centers
 			     # 6 = void size function at given time $ST and threshold $THR
 			     # 7 = void fraction and energy as a function of time and threshold $THR
 			     # 8 = density profiles of heaviest $NH objects at time $ST
 			     # 9 = density profiles of first $NH voids at time $ST and threshold/radius $THR,VRAD
+		             # 10 = density variation plot
 
-NFI=1                        # Number of files to process
-ST=4                         # Snapshot selected
+
+NFI=1                       # Number of files to process
+ST=13                        # Snapshot selected
 
 MAP='pride'                  # Map type, only if OPT=0. Maps from cmasher ONLY are accepted 
-CR=2048                      # Camera resolution in volume render
+CR=6000                      # Camera resolution in volume render
 
-NB=100                       # Number of bins for density distribution
-DIFF=0                       # Add distribution of gradient energy  
+NB=80                        # Number of bins for density distribution
+DIFF=False                   # Add distribution of gradient density
+DIRE='A'                     # Direction of the gradient distribution (N,S,E,W,F,B), 'A' is averaged 
 
-VRAD=25                      # Void radius for density distribution (OPT=5) or profile (OPT=9)
-FIL='False'                   # Check for filaments instead of voids
+VRAD=14                      # Void radius for density distribution (OPT=5) or profile (OPT=9)
+FIL=False                    # Check for filaments instead of voids
 THR=0.7                      # Void threshold for smoothing, only for OPT=5,6
-THR2=0.5                     # Lower threshold for filaments
+THR2=0.15                    # Lower threshold for filaments
  
-FOF='True'                   # FOF data or Subhalo data for profiles 
+FOF=True                     # FOF data or Subhalo data for profiles 
 RAD='R200'                   # Radius in profile: 'R200','R500','RMean','TopHat'
-RMIN=1                       # Rmin for profile in units of the softening lenght
-NH=10                         # Number of halos to profile
+RMIN=1                       # Rmin for profile in units of the softening length
+NH=200                       # Number of halos/voids to profile
 
-python3 postprocessing.py ic1v_late_v2 $OPT $NFI $ST $MAP $CR $NB $DIFF $VRAD $FIL $THR $THR2 $FOF $RAD $RMIN $NH   
+python3 postprocessing.py ic1 $OPT $NFI $ST $MAP $CR $NB $DIFF $DIRE $VRAD $FIL $THR $THR2 $FOF $RAD $RMIN $NH  
